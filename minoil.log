@@ -1,0 +1,159 @@
+
+> nextn@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.3.8
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.40:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.8s
+ ○ Compiling / ...
+ ✓ Compiled / in 4.5s (932 modules)
+ GET / 200 in 5492ms
+ ✓ Compiled in 978ms (366 modules)
+ POST / 200 in 1054ms
+ ○ Compiling /admin/work-orders ...
+ ✓ Compiled /admin/work-orders in 6.4s (3722 modules)
+ GET /grid.svg 404 in 6835ms
+ GET /admin/work-orders 200 in 7092ms
+ GET /admin/work-orders 200 in 40ms
+ POST /admin/work-orders 200 in 138ms
+ POST /admin/work-orders 200 in 16ms
+ POST /admin/work-orders 200 in 17ms
+ GET /avatars/01.png 404 in 84ms
+ POST /admin/work-orders 200 in 41ms
+ POST /admin/work-orders 200 in 126ms
+ POST /admin/work-orders 200 in 43ms
+ POST /admin/work-orders 200 in 24ms
+ POST /admin/work-orders 200 in 28ms
+ POST /admin/work-orders 200 in 29ms
+ POST /admin/work-orders 200 in 24ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 20ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 24ms
+ POST /admin/work-orders 200 in 21ms
+ POST /admin/work-orders 200 in 21ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 39ms
+ POST /admin/work-orders 200 in 18ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 21ms
+ POST /admin/work-orders 200 in 20ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 21ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 19ms
+ POST /admin/work-orders 200 in 24ms
+ POST /admin/work-orders 200 in 15ms
+ POST /admin/work-orders 200 in 15ms
+ POST /admin/work-orders 200 in 15ms
+ POST /admin/work-orders 200 in 20ms
+ POST /admin/work-orders 200 in 20ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 16ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 13ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 13ms
+ POST /admin/work-orders 200 in 13ms
+ POST /admin/work-orders 200 in 12ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 15ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 14ms
+ POST /admin/work-orders 200 in 13ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 22ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 49ms
+ POST /admin/work-orders 200 in 37ms
+ ○ Compiling /admin/gantt ...
+ ✓ Compiled /admin/gantt in 2.4s (3741 modules)
+ GET /admin/gantt 200 in 2668ms
+ GET /admin/gantt 200 in 33ms
+ ○ Compiling /api/work-orders ...
+ ✓ Compiled /api/work-orders in 1463ms (3762 modules)
+ GET /api/work-orders 200 in 1779ms
+ GET /api/work-orders 200 in 21ms
+ GET /admin/work-orders 200 in 160ms
+ GET /admin/work-orders 200 in 28ms
+ POST /admin/work-orders 200 in 136ms
+ POST /admin/work-orders 200 in 23ms
+ POST /admin/work-orders 200 in 20ms
+ POST /admin/work-orders 200 in 27ms
+ POST /admin/work-orders 200 in 112ms
+📝 Creating new work order with data: {
+  orderNumber: '12',
+  component: 'Transmision',
+  brand: 'CAT',
+  equipment: '71S',
+  serialNumber: '12ss',
+  solped: '1',
+  purchaseOrder: '2',
+  client: 'Doctor Piscinas',
+  clientId: '696792036aaad98a594021da',
+  workOrderType: 'Normal',
+  createdAt: '2025-11-01',
+  estimatedEvaluationStartDate: '2025-11-03'
+}
+✅ Work order created with orderNumber: 12 and ID: 6967fe989e9a0152ebf40453
+📦 Creating incremental backup for workOrders/6967fe989e9a0152ebf40453...
+ POST /admin/work-orders 200 in 240ms
+✅ Backup created for workOrders/6967fe989e9a0152ebf40453
+ POST /admin/work-orders 200 in 39ms
+ POST /admin/work-orders 200 in 29ms
+📝 Updating work order: 6967fe989e9a0152ebf40453 with data: { status: 'Espera de Desarme y Evaluación', updateDate: '2026-11-01' }
+✅ Work order updated successfully
+📦 Creating incremental backup for workOrders/6967fe989e9a0152ebf40453...
+✅ Backup created for workOrders/6967fe989e9a0152ebf40453
+ POST /admin/work-orders 200 in 103ms
+ POST /admin/work-orders 200 in 35ms
+🗑️ Deleting work order with ID: 6967fe989e9a0152ebf40453
+✅ Work order 6967fe989e9a0152ebf40453 deleted successfully.
+ POST /admin/work-orders 200 in 133ms
+ POST /admin/work-orders 200 in 37ms
+🗑️ Deleting work order with ID: 69679859ff2bb84d1f4abf15
+✅ Work order 69679859ff2bb84d1f4abf15 deleted successfully.
+ POST /admin/work-orders 200 in 55ms
+ POST /admin/work-orders 200 in 43ms
+ POST /admin/work-orders 200 in 62ms
+🗑️ Deleting work order with ID: 6966b413f376e27b29b84276
+✅ Work order 6966b413f376e27b29b84276 deleted successfully.
+ POST /admin/work-orders 200 in 51ms
+ POST /admin/work-orders 200 in 30ms
+🗑️ Deleting work order with ID: 6966b413f376e27b29b84277
+✅ Work order 6966b413f376e27b29b84277 deleted successfully.
+ POST /admin/work-orders 200 in 54ms
+ POST /admin/work-orders 200 in 34ms
+ POST /admin/work-orders 200 in 48ms
+📝 Creating new work order with data: {
+  orderNumber: '1',
+  component: 'Transmision',
+  brand: 'CAT',
+  equipment: '793F',
+  serialNumber: 'SN-123',
+  solped: '1',
+  purchaseOrder: '1',
+  client: 'Minera ',
+  clientId: '6966b413f376e27b29b84264',
+  workOrderType: 'Normal',
+  createdAt: '2025-11-01',
+  estimatedEvaluationStartDate: '2025-11-02'
+}
+✅ Work order created with orderNumber: 1 and ID: 6967feed9e9a0152ebf40465
+📦 Creating incremental backup for workOrders/6967feed9e9a0152ebf40465...
+✅ Backup created for workOrders/6967feed9e9a0152ebf40465
+ POST /admin/work-orders 200 in 66ms
+ POST /admin/work-orders 200 in 35ms
+ POST /admin/work-orders 200 in 120ms
+^C^C

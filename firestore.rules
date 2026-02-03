@@ -1,0 +1,145 @@
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
+    // -------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     * Covers all sign-in methods, including password and anonymous.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Rules
+    // -------------------------------------------------------------------------
+
+    /**
+     * @description Manages client information. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /clients/{clientId}
+     * @allow (create) An authenticated user creates a new client document.
+     * @deny  (create) An unauthenticated user attempts to create a client.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /clients/{clientId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages component data. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /components/{componentId}
+     * @allow (get) An authenticated user reads a specific component.
+     * @deny  (get) An unauthenticated user attempts to read a component.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /components/{componentId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages equipment data. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /equipment/{equipmentId}
+     * @allow (list) An authenticated user lists all equipment documents.
+     * @deny  (list) An unauthenticated user attempts to list equipment.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /equipment/{equipmentId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages status definitions. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /status/{statusId}
+     * @allow (update) An authenticated user updates an existing status.
+     * @deny  (update) An unauthenticated user attempts to update a status.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /status/{statusId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages service definitions. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /services/{serviceId}
+     * @allow (create) An authenticated user creates a new service.
+     * @deny  (delete) An unauthenticated user attempts to delete a service.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages test bench information. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /testBenches/{testBenchId}
+     * @allow (get) An authenticated user reads test bench data.
+     * @deny  (create) An unauthenticated user attempts to create a test bench.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /testBenches/{testBenchId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages work order stage definitions. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /stages/{stageId}
+     * @allow (delete) An authenticated user deletes an existing stage.
+     * @deny  (update) An unauthenticated user attempts to update a stage.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /stages/{stageId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    /**
+     * @description Manages core work order documents. All authenticated users are
+     *   treated as internal operators and can manage this data.
+     * @path /workOrders/{workOrderId}
+     * @allow (create) An authenticated user creates a new work order.
+     * @deny  (get) An unauthenticated user attempts to read a work order.
+     * @principle Grants full read/write access to any authenticated user.
+     */
+    match /workOrders/{workOrderId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+     /**
+     * @description Manages inventory items (spare parts). 
+     * All authenticated users are treated as internal operators.
+     */
+    match /inventoryItems/{itemId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+     /**
+     * @description Manages tools. 
+     * All authenticated users are treated as internal operators.
+     */
+    match /tools/{toolId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}
+

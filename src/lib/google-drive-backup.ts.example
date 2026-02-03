@@ -1,0 +1,209 @@
+/**
+ * ARCHIVO DE EJEMPLO - Integración con Google Drive
+ *
+ * Para usar este archivo:
+ * 1. Renombrar a google-drive-backup.ts (sin .example)
+ * 2. Seguir las instrucciones en BACKUP_SETUP.md para configurar las credenciales
+ * 3. Instalar: npm install googleapis
+ * 4. Crear el archivo google-credentials.json en la raíz del proyecto
+ */
+
+import { google } from 'googleapis';
+import { promises as fs } from 'fs';
+import path from 'path';
+
+// Ruta al archivo de credenciales de Google
+const KEYFILE_PATH = path.join(process.cwd(), 'google-credentials.json');
+
+// ID de la carpeta en Google Drive donde se guardarán los backups
+// Para obtener este ID:
+// 1. Ve a Google Drive
+// 2. Crea una carpeta llamada "Minoil-Backups"
+// 3. Abre la carpeta y copia el ID de la URL: https://drive.google.com/drive/folders/[FOLDER_ID]
+const FOLDER_ID = 'TU_FOLDER_ID_AQUI';
+
+/**
+ * Sube un archivo de backup a Google Drive
+ */
+export async function uploadToGoogleDrive(filepath: string): Promise<string> {
+  try {
+    // Verificar que el archivo de credenciales existe
+    try {
+      await fs.access(KEYFILE_PATH);
+    } catch (error) {
+      throw new Error(
+        `Archivo de credenciales no encontrado: ${KEYFILE_PATH}\n` +
+        'Por favor, sigue las instrucciones en BACKUP_SETUP.md para configurar las credenciales.'
+      );
+    }
+
+    // Autenticar con Google Drive
+    const auth = new google.auth.GoogleAuth({
+      keyFile: KEYFILE_PATH,
+      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    });
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    // Leer el archivo
+    const fileContent = await fs.readFile(filepath);
+    const filename = path.basename(filepath);
+
+    // Verificar si ya existe un archivo con el mismo nombre
+    const existingFiles = await drive.files.list({
+      q: `name='${filename}' and '${FOLDER_ID}' in parents and trashed=false`,
+      fields: 'files(id, name)',
+    });
+
+    if (existingFiles.data.files && existingFiles.data.files.length > 0) {
+      // Eliminar archivo existente
+      const fileId = existingFiles.data.files[0].id!;
+      await drive.files.delete({ fileId });
+      console.log(`   🗑️ Archivo existente eliminado de Google Drive: ${filename}`);
+    }
+
+    // Subir nuevo archivo
+    const fileMetadata = {
+      name: filename,
+      parents: [FOLDER_ID],
+    };
+
+    const media = {
+      mimeType: 'application/json',
+      body: fileContent,
+    };
+
+    const response = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      fields: 'id, name, webViewLink',
+    });
+
+    console.log(`   ☁️ Backup subido a Google Drive: ${response.data.name}`);
+    console.log(`   🔗 Link: ${response.data.webViewLink}`);
+
+    return response.data.id!;
+  } catch (error: any) {
+    console.error('❌ Error subiendo a Google Drive:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Lista todos los backups en Google Drive
+ */
+export async function listGoogleDriveBackups(): Promise<Array<{
+  id: string;
+  name: string;
+  createdTime: string;
+  size: string;
+  webViewLink: string;
+}>> {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: KEYFILE_PATH,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+    });
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    const response = await drive.files.list({
+      q: `'${FOLDER_ID}' in parents and trashed=false and mimeType='application/json'`,
+      fields: 'files(id, name, createdTime, size, webViewLink)',
+      orderBy: 'createdTime desc',
+    });
+
+    return response.data.files?.map(file => ({
+      id: file.id!,
+      name: file.name!,
+      createdTime: file.createdTime!,
+      size: file.size!,
+      webViewLink: file.webViewLink!,
+    })) || [];
+  } catch (error: any) {
+    console.error('❌ Error listando backups de Google Drive:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Descarga un backup de Google Drive
+ */
+export async function downloadFromGoogleDrive(fileId: string, destinationPath: string): Promise<void> {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: KEYFILE_PATH,
+      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+    });
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    const response = await drive.files.get(
+      { fileId, alt: 'media' },
+      { responseType: 'stream' }
+    );
+
+    const dest = await fs.open(destinationPath, 'w');
+    const writeStream = dest.createWriteStream();
+
+    await new Promise((resolve, reject) => {
+      response.data
+        .on('end', () => {
+          console.log(`   ✅ Backup descargado de Google Drive: ${destinationPath}`);
+          resolve(true);
+        })
+        .on('error', (err: any) => {
+          console.error('   ❌ Error descargando:', err);
+          reject(err);
+        })
+        .pipe(writeStream);
+    });
+
+    await dest.close();
+  } catch (error: any) {
+    console.error('❌ Error descargando de Google Drive:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Elimina backups antiguos de Google Drive (mantener últimos N)
+ */
+export async function cleanOldGoogleDriveBackups(keepCount: number = 30): Promise<number> {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: KEYFILE_PATH,
+      scopes: ['https://www.googleapis.com/auth/drive.file'],
+    });
+
+    const drive = google.drive({ version: 'v3', auth });
+
+    // Listar todos los backups
+    const backups = await listGoogleDriveBackups();
+
+    if (backups.length <= keepCount) {
+      console.log(`   ℹ️ Solo hay ${backups.length} backups, no hay nada que eliminar`);
+      return 0;
+    }
+
+    // Eliminar los más antiguos
+    const toDelete = backups.slice(keepCount);
+    let deleted = 0;
+
+    for (const backup of toDelete) {
+      try {
+        await drive.files.delete({ fileId: backup.id });
+        console.log(`   🗑️ Eliminado de Google Drive: ${backup.name}`);
+        deleted++;
+      } catch (error: any) {
+        console.error(`   ❌ Error eliminando ${backup.name}:`, error.message);
+      }
+    }
+
+    console.log(`   ✅ Eliminados ${deleted} backups antiguos de Google Drive`);
+    return deleted;
+  } catch (error: any) {
+    console.error('❌ Error limpiando backups de Google Drive:', error.message);
+    throw error;
+  }
+}

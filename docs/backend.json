@@ -1,0 +1,426 @@
+
+{
+  "entities": {
+    "WorkOrder": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WorkOrder",
+      "type": "object",
+      "description": "Represents a work order in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the work order."
+        },
+        "clientId": {
+          "type": "string",
+          "description": "Reference to the Client who requested the work order. (Relationship: Client 1:N WorkOrder)"
+        },
+        "componentId": {
+          "type": "string",
+          "description": "Reference to the Component being worked on. (Relationship: Component 1:N WorkOrder)"
+        },
+        "equipmentId": {
+          "type": "string",
+          "description": "Reference to the Equipment the component belongs to. (Relationship: Equipment 1:N WorkOrder)"
+        },
+        "statusId": {
+          "type": "string",
+          "description": "Reference to the Status of the work order. (Relationship: Status 1:N WorkOrder)"
+        },
+        "progress": {
+          "type": "number",
+          "description": "The completion progress of the work order (0-100)."
+        },
+        "dateCreated": {
+          "type": "string",
+          "description": "The date and time the work order was created.",
+          "format": "date-time"
+        },
+        "dateUpdated": {
+          "type": "string",
+          "description": "The date and time the work order was last updated.",
+          "format": "date-time"
+        },
+        "stageId": {
+          "type": "string",
+          "description": "Reference to the Stage of the work order. (Relationship: Stage 1:N WorkOrder)"
+        },
+        "metrics": {
+          "type": "string",
+          "description": "Detailed metrics captured at each stage.",
+          "format": "string"
+        }
+      },
+      "required": [
+        "id",
+        "clientId",
+        "componentId",
+        "equipmentId",
+        "statusId",
+        "progress",
+        "dateCreated",
+        "dateUpdated",
+        "stageId",
+        "metrics"
+      ]
+    },
+    "Client": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Client",
+      "type": "object",
+      "description": "Represents a client in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the client."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the client."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "The contact email for the client.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "contactEmail"
+      ]
+    },
+    "Component": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Component",
+      "type": "object",
+      "description": "Represents a component in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the component."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the component."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of component (e.g., Transmisiones, Mandos Finales)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type"
+      ]
+    },
+    "Equipment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Equipment",
+      "type": "object",
+      "description": "Represents equipment in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the equipment."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the equipment (e.g., CAT 793F, Komatsu 930E)."
+        },
+        "model": {
+          "type": "string",
+          "description": "The model of the equipment."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "model"
+      ]
+    },
+    "Status": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Status",
+      "type": "object",
+      "description": "Represents the status of a work order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the status."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the status (e.g., En Proceso, Finalizado, Pendiente, Urgente)."
+        },
+        "colorCode": {
+          "type": "string",
+          "description": "The color code associated with the status."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "colorCode"
+      ]
+    },
+    "Service": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Service",
+      "type": "object",
+      "description": "Represents a service provided in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the service."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the service."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the service."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "TestBench": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TestBench",
+      "type": "object",
+      "description": "Represents the test bench in the mining operation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the test bench."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the test bench."
+        },
+        "capabilities": {
+          "type": "string",
+          "description": "The technical capabilities of the test bench."
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "capabilities"
+      ]
+    },
+    "Stage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Stage",
+      "type": "object",
+      "description": "Represents a stage in the work order process.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the stage."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the stage (e.g., Diagnosis, Repair, Testing)."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the stage."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+     "InventoryItem": {
+      "title": "InventoryItem",
+      "type": "object",
+      "description": "Represents a spare part or consumable in the inventory.",
+      "properties": {
+        "id": {"type": "string", "description": "Unique identifier for the inventory item."},
+        "code": {"type": "string", "description": "The internal or manufacturer code for the item."},
+        "description": {"type": "string", "description": "A detailed description of the item."},
+        "quantity": {"type": "number", "description": "The current quantity in stock."},
+        "location": {"type": "string", "description": "The physical location in the warehouse (e.g., Aisle 5, Shelf C)."},
+        "unitPrice": {"type": "number", "description": "The price per unit, for valuation purposes."}
+      },
+      "required": ["id", "code", "description", "quantity", "location"]
+    },
+    "Tool": {
+      "title": "Tool",
+      "type": "object",
+      "description": "Represents a tool or piece of equipment used in the workshop.",
+      "properties": {
+        "id": {"type": "string", "description": "Unique identifier for the tool."},
+        "code": {"type": "string", "description": "The internal code or serial number of the tool."},
+        "description": {"type": "string", "description": "A description of the tool."},
+        "status": {"type": "string", "enum": ["Disponible", "En Uso", "En Mantenimiento"], "description": "The current status of the tool."},
+        "assignedTo": {"type": "string", "description": "The email or ID of the person the tool is currently assigned to."}
+      },
+      "required": ["id", "code", "description", "status"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/clients/{clientId}",
+        "definition": {
+          "entityName": "Client",
+          "schema": {
+            "$ref": "#/backend/entities/Client"
+          },
+          "description": "Stores client information.  `clientId` is the document ID.",
+          "params": [
+            {
+              "name": "clientId",
+              "description": "The unique identifier of the client."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/components/{componentId}",
+        "definition": {
+          "entityName": "Component",
+          "schema": {
+            "$ref": "#/backend/entities/Component"
+          },
+          "description": "Stores component information. `componentId` is the document ID.",
+          "params": [
+            {
+              "name": "componentId",
+              "description": "The unique identifier of the component."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/equipment/{equipmentId}",
+        "definition": {
+          "entityName": "Equipment",
+          "schema": {
+            "$ref": "#/backend/entities/Equipment"
+          },
+          "description": "Stores equipment information. `equipmentId` is the document ID.",
+          "params": [
+            {
+              "name": "equipmentId",
+              "description": "The unique identifier of the equipment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/status/{statusId}",
+        "definition": {
+          "entityName": "Status",
+          "schema": {
+            "$ref": "#/backend/entities/Status"
+          },
+          "description": "Stores status information. `statusId` is the document ID.",
+          "params": [
+            {
+              "name": "statusId",
+              "description": "The unique identifier of the status."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/services/{serviceId}",
+        "definition": {
+          "entityName": "Service",
+          "schema": {
+            "$ref": "#/backend/entities/Service"
+          },
+          "description": "Stores service information. `serviceId` is the document ID.",
+          "params": [
+            {
+              "name": "serviceId",
+              "description": "The unique identifier of the service."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/testBenches/{testBenchId}",
+        "definition": {
+          "entityName": "TestBench",
+          "schema": {
+            "$ref": "#/backend/entities/TestBench"
+          },
+          "description": "Stores test bench information. `testBenchId` is the document ID.",
+          "params": [
+            {
+              "name": "testBenchId",
+              "description": "The unique identifier of the test bench."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/stages/{stageId}",
+        "definition": {
+          "entityName": "Stage",
+          "schema": {
+            "$ref": "#/backend/entities/Stage"
+          },
+          "description": "Stores stage information. `stageId` is the document ID.",
+          "params": [
+            {
+              "name": "stageId",
+              "description": "The unique identifier of the stage."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/workOrders/{workOrderId}",
+        "definition": {
+          "entityName": "WorkOrder",
+          "schema": {
+            "$ref": "#/backend/entities/WorkOrder"
+          },
+          "description": "Stores work order information. Includes denormalized `clientId` for authorization independence. `workOrderId` is the document ID.",
+          "params": [
+            {
+              "name": "workOrderId",
+              "description": "The unique identifier of the work order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/inventoryItems/{itemId}",
+        "definition": {
+          "entityName": "InventoryItem",
+          "schema": { "$ref": "#/backend/entities/InventoryItem" },
+          "description": "Stores individual spare parts and their stock levels."
+        }
+      },
+      {
+        "path": "/tools/{toolId}",
+        "definition": {
+          "entityName": "Tool",
+          "schema": { "$ref": "#/backend/entities/Tool" },
+          "description": "Stores workshop tools and their status."
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to manage work orders and related data for a mining operation, focusing on security, scalability, and debuggability. It incorporates key principles like Authorization Independence via Denormalization, Structural Segregation, and standardized Access Modeling to ensure a robust and maintainable system.\n\n*   **Authorization Independence:**  The `workOrders` collection denormalizes client information by including the `clientId` directly within each work order document. This eliminates the need for `get()` calls to the `clients` collection in security rules, enabling atomic operations and simplifying authorization logic.\n*   **Structural Segregation:** Separate collections are used for different types of entities (`clients`, `components`, `equipment`, `status`, `services`, `testBenches`, `stages`, and `workOrders`), ensuring that documents within each collection share the same security requirements.\n*   **Access Modeling:**\n    *   **Path-Based Ownership:** While there isn't direct user ownership in this design, the `clientId` in `workOrders` can be used to establish client-specific access control if needed.\n    *   **Collaborative Data (Not Applicable):** This structure doesn't explicitly use collaborative data patterns like membership maps because the main relationship is between clients and their work orders and not between users.\n    *   **Global Roles (DBAC - Existence over Content - Not Applicable):** Global roles are not explicitly defined in this data structure. Administrative or elevated roles could be added using a dedicated collection like `/roles_admin/{uid}` if necessary, but that is outside the scope of this model.\n*   **QAPs (Rules are not Filters):** The structure supports secure `list` operations. For example, listing work orders for a specific client is achieved via a collection group query and filtering by the denormalized `clientId`. Security rules can then validate that the requesting user has access to the specified client's data, ensuring that they cannot list work orders from other clients.\n\nThis design prioritizes simplicity and security by avoiding complex hierarchical dependencies and ensuring that security rules can be evaluated efficiently based on the data present in each document."
+  }
+}
