@@ -21,7 +21,7 @@ import { addWorkOrderAction, deleteWorkOrderAction } from "@/app/actions";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 
 const formSchema = z.object({
-  id: z.string().min(1, "El número de OT es requerido."),
+  orderNumber: z.string().min(1, "El número de OT es requerido."),
   component: z.string().min(1, "El tipo de componente es requerido."),
   brand: z.string().min(1, "La marca es requerida."),
   equipment: z.string().min(1, "La serie/modelo es requerida."),
@@ -61,25 +61,19 @@ export function EditOrderDialog({ isOpen, onOpenChange, order, onUpdate }: EditO
 
   const handleConfirm = async () => {
     if (!formData) return;
-    
-    const idHasChanged = formData.id !== order.id;
 
     try {
-        if (idHasChanged) {
-            // Re-create the work order with the new ID and delete the old one
-            const newOrderPayload = {
-                ...order, // a-z spread of original order data
-                ...formData, // a-z spread of any edited fields
-            };
-            
-            await addWorkOrderAction(newOrderPayload);
-            await deleteWorkOrderAction(order.id);
-            
-            toast({
-                title: "Orden Recreada",
-                description: `La OT antigua ${order.id} fue eliminada y recreada como ${formData.id}.`,
-            });
-        }
+        const updatedOrder = {
+            ...order,
+            ...formData,
+        };
+        
+        await addWorkOrderAction(updatedOrder);
+        
+        toast({
+            title: "Orden Actualizada",
+            description: "Los detalles de la orden de trabajo han sido actualizados correctamente.",
+        });
         
         onUpdate(order);
         onOpenChange(false);
@@ -101,15 +95,15 @@ export function EditOrderDialog({ isOpen, onOpenChange, order, onUpdate }: EditO
           <DialogHeader>
             <DialogTitle className="font-headline">Editar Detalles de la Orden de Trabajo</DialogTitle>
             <DialogDescription>
-              Modifique la información principal de la OT.
+              {order.orderNumber ? `OT: ${order.orderNumber}` : `ID: ${order.id?.slice(-8).toUpperCase()}`} - Modifique la información principal de la OT.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(handleFormSubmit)} className="grid gap-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="id">Número de OT</Label>
-                <Input id="id" {...register("id")} />
-                {errors.id && <p className="text-sm text-destructive">{errors.id.message}</p>}
+                <Label htmlFor="orderNumber">Número de OT</Label>
+                <Input id="orderNumber" {...register("orderNumber")} />
+                {errors.orderNumber && <p className="text-sm text-destructive">{errors.orderNumber.message}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="client">Cliente</Label>
@@ -166,10 +160,7 @@ export function EditOrderDialog({ isOpen, onOpenChange, order, onUpdate }: EditO
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar Cambios</AlertDialogTitle>
             <AlertDialogDescription>
-              {formData?.id !== order.id ?
-                `Estás a punto de cambiar el ID de la OT de "${order.id}" a "${formData?.id}". Esto creará una nueva orden y eliminará la antigua. ¿Continuar?` :
-                "¿Estás seguro de que deseas guardar los cambios en esta orden de trabajo?"
-              }
+              ¿Estás seguro de que deseas guardar los cambios en esta orden de trabajo?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

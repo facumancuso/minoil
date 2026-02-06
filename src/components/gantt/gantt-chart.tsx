@@ -25,14 +25,15 @@ const years = Array.from({ length: 5 }, (_, i) => (currentYear - 2 + i).toString
 const STAGES: { id: Status; label: string; color: string }[] = [
   { id: 'Espera de Desarme y Evaluación', label: 'Espera Desarme', color: '#94a3b8' },
   { id: 'Desarme y Evaluación', label: 'Desarme', color: '#fbbf24' },
-  { id: 'Simulacion', label: 'Simulacion', color: '#38bdf8' },
-  { id: 'Cotizacion', label: 'Cotizacion', color: '#60a5fa' },
+  { id: 'Simulacion', label: 'Simulación', color: '#38bdf8' },
+  { id: 'Cotizacion', label: 'Cotización', color: '#60a5fa' },
   { id: 'Cotizacion al cliente', label: 'Cotiz. Cliente', color: '#a78bfa' },
-  { id: 'Espera de repuesto', label: 'Repuesto', color: '#f97316' },
+  { id: 'Espera de repuesto', label: 'Esp. Repuesto', color: '#f97316' },
   { id: 'Llegada de Repuesto', label: 'Llegada Rep.', color: '#14b8a6' },
   { id: 'Rechazado por Cliente', label: 'Rechazado', color: '#ef4444' },
-  { id: 'Armado', label: 'Armado', color: '#f97316' },
+  { id: 'Armado', label: 'Armado', color: '#22c55e' },
   { id: 'Listo para Entregar', label: 'Listo', color: '#10b981' },
+  { id: 'Entregado', label: 'Entregado', color: '#059669' },
   { id: 'Espera de Retiro', label: 'Retiro', color: '#84cc16' },
 ];
 
@@ -68,38 +69,190 @@ const generateBlocksFromDates = (order: WorkOrder): GanttBlock[] => {
   const blocks: GanttBlock[] = [];
   const now = new Date();
 
-  const evalStart = getDate(order.evaluationStartDate);
-  const evalEnd = getDate(order.evaluationEndDate);
-  const evalEstEnd = getDate(order.evaluationEstimatedEndDate);
+  // Crear un mapa de etapas con sus fechas disponibles
+  interface StageInfo {
+    status: Status;
+    startDate?: Date;
+    endDate?: Date;
+    estimatedEndDate?: Date;
+    mechanics?: number;
+    noteText?: string;
+  }
 
-  const assemblyStart = getDate(order.assemblyStartDate);
-  const assemblyEnd = getDate(order.assemblyEndDate);
-  const assemblyEstEnd = getDate(order.assemblyEstimatedEndDate);
+  const stageMap: Record<Status, StageInfo> = {
+    'Espera de Desarme y Evaluación': {
+      status: 'Espera de Desarme y Evaluación',
+      startDate: getDate(order.createdAt),
+    },
+    'Desarme y Evaluación': {
+      status: 'Desarme y Evaluación',
+      startDate: getDate(order.evaluationStartDate),
+      endDate: getDate(order.evaluationEndDate),
+      estimatedEndDate: getDate(order.evaluationEstimatedEndDate),
+      mechanics: order.evaluationMechanics,
+    },
+    'Simulacion': {
+      status: 'Simulacion',
+    },
+    'Cotizacion': {
+      status: 'Cotizacion',
+    },
+    'Cotizacion al cliente': {
+      status: 'Cotizacion al cliente',
+    },
+    'Espera de repuesto': {
+      status: 'Espera de repuesto',
+      estimatedEndDate: getDate(order.sparePartsEstimatedArrivalDate),
+      endDate: getDate(order.sparePartsArrivalDate),
+    },
+    'Llegada de Repuesto': {
+      status: 'Llegada de Repuesto',
+      startDate: getDate(order.sparePartsArrivalDate),
+    },
+    'Rechazado por Cliente': {
+      status: 'Rechazado por Cliente',
+    },
+    'Armado': {
+      status: 'Armado',
+      startDate: getDate(order.assemblyStartDate),
+      endDate: getDate(order.assemblyEndDate),
+      estimatedEndDate: getDate(order.assemblyEstimatedEndDate),
+      mechanics: order.assemblyMechanics,
+    },
+    'Listo para Entregar': {
+      status: 'Listo para Entregar',
+      startDate: getDate(order.assemblyEndDate),
+    },
+    'Entregado': {
+      status: 'Entregado',
+    },
+    'Espera de Retiro': {
+      status: 'Espera de Retiro',
+    },
+  };
 
-  // 1. Desarme y Evaluación (ONLY)
-  if (evalStart) {
-    const end = evalEnd || (order.status === 'Desarme y Evaluación' ? now : undefined);
+  // Usar el historial de notas para reconstruir todas las etapas en orden cronológico
+  if (order.notes && order.notes.length > 0) {
+    // Ordenar notas por timestamp
+    const sortedNotes = [...order.notes].sort((a, b) => {
+      const dateA = getDate(a.timestamp);
+      const dateB = getDate(b.timestamp);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    });
 
-    // If we have an end date (either real or 'now' if in progress), show the block.
-    // If it's blocked/pending but we have a start date, we might want to show it up to now or estimated?
-    // Let's stick to: if we have a start date, we show it.
+    // Crear lista de cambios de estado únicos en orden cronológico
+    const stateSequence: { status: Status; timestamp: Date; note?: string }[] = [];
+    let lastStatus: Status | null = null;
 
-    // Determine the visualization end date. 
-    // If completed (evalEnd exists), use it.
-    // If in progress (status is Desarme), use Now.
-    // If moved past Desarme but no explicit evalEnd (unlikely if data is good, but good fallback), use evalEstEnd or Now.
-
-    let displayEnd = evalEnd;
-    if (!displayEnd) {
-      if (order.status === 'Desarme y Evaluación') {
-        displayEnd = now;
-      } else if (order.status !== 'Espera de Desarme y Evaluación') {
-        // Past this stage?
-        displayEnd = evalEstEnd || evalStart; // Fallback
+    for (const note of sortedNotes) {
+      if (note.status !== lastStatus) {
+        const timestamp = getDate(note.timestamp);
+        if (timestamp) {
+          stateSequence.push({
+            status: note.status,
+            timestamp,
+            note: note.note,
+          });
+          lastStatus = note.status;
+        }
       }
     }
 
-    if (displayEnd) {
+    // Crear bloques para cada etapa en la secuencia
+    for (let i = 0; i < stateSequence.length; i++) {
+      const currentState = stateSequence[i];
+      const nextState = stateSequence[i + 1];
+
+      const startDate = currentState.timestamp;
+      let endDate: Date;
+
+      // La fecha de fin es el inicio de la siguiente etapa, o ahora si es la última
+      if (nextState) {
+        endDate = nextState.timestamp;
+      } else {
+        endDate = now;
+      }
+
+      // Obtener información específica de la etapa
+      const stageInfo = stageMap[currentState.status];
+      let mechanics: number | undefined;
+      let realEndDate: Date | undefined;
+      let estimatedEndDate: Date | undefined;
+
+      if (stageInfo) {
+        mechanics = stageInfo.mechanics;
+        estimatedEndDate = stageInfo.estimatedEndDate;
+        realEndDate = stageInfo.endDate;
+
+        // Si tenemos fecha real de fin para esta etapa, usarla si hay siguiente etapa
+        if (realEndDate && nextState) {
+          endDate = realEndDate;
+        }
+      }
+
+      const duration = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24)));
+
+      blocks.push({
+        startDay: startDate,
+        endDay: endDate,
+        stage: currentState.status,
+        note: currentState.note,
+        duration,
+        mechanics,
+        realEndDate,
+        estimatedEndDate
+      });
+    }
+  } else {
+    // Fallback: usar fechas específicas si no hay historial de notas
+    // Construir una secuencia de bloques basados en las fechas disponibles y el estado actual
+
+    const createdAt = getDate(order.createdAt);
+    const evalStart = getDate(order.evaluationStartDate);
+    const evalEnd = getDate(order.evaluationEndDate);
+    const evalEstEnd = getDate(order.evaluationEstimatedEndDate);
+
+    const assemblyStart = getDate(order.assemblyStartDate);
+    const assemblyEnd = getDate(order.assemblyEndDate);
+    const assemblyEstEnd = getDate(order.assemblyEstimatedEndDate);
+
+    const sparePartsArrivalDate = getDate(order.sparePartsArrivalDate);
+    const sparePartsEstimatedDate = getDate(order.sparePartsEstimatedArrivalDate);
+
+    // Crear bloques en orden cronológico basándose en fechas disponibles
+    const blockCandidates: { date: Date; stage: Status; type: 'start' | 'end' }[] = [];
+
+    // Recolectar todos los puntos de inicio/fin de etapas
+    if (createdAt) blockCandidates.push({ date: createdAt, stage: 'Espera de Desarme y Evaluación', type: 'start' });
+    if (evalStart) blockCandidates.push({ date: evalStart, stage: 'Desarme y Evaluación', type: 'start' });
+    if (evalEnd) blockCandidates.push({ date: evalEnd, stage: 'Desarme y Evaluación', type: 'end' });
+    if (sparePartsEstimatedDate) blockCandidates.push({ date: sparePartsEstimatedDate, stage: 'Espera de repuesto', type: 'start' });
+    if (sparePartsArrivalDate) blockCandidates.push({ date: sparePartsArrivalDate, stage: 'Llegada de Repuesto', type: 'start' });
+    if (assemblyStart) blockCandidates.push({ date: assemblyStart, stage: 'Armado', type: 'start' });
+    if (assemblyEnd) blockCandidates.push({ date: assemblyEnd, stage: 'Armado', type: 'end' });
+
+    // Ordenar por fecha
+    blockCandidates.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Crear bloques basándose en la secuencia de fechas
+    if (createdAt) {
+      // Espera de Desarme y Evaluación
+      const waitEnd = evalStart || now;
+      blocks.push({
+        startDay: createdAt,
+        endDay: waitEnd,
+        stage: 'Espera de Desarme y Evaluación',
+        duration: Math.max(1, Math.ceil((waitEnd.getTime() - createdAt.getTime()) / (1000 * 3600 * 24))),
+      });
+    }
+
+    // Desarme y Evaluación
+    if (evalStart) {
+      let displayEnd = evalEnd || evalEstEnd || now;
+      if (!evalEnd && order.status === 'Desarme y Evaluación') {
+        displayEnd = now;
+      }
       blocks.push({
         startDay: evalStart,
         endDay: displayEnd,
@@ -110,26 +263,38 @@ const generateBlocksFromDates = (order: WorkOrder): GanttBlock[] => {
         estimatedEndDate: evalEstEnd
       });
     }
-  }
 
-  // 2. Armado (ONLY)
-  if (assemblyStart) {
-    const end = assemblyEnd || (order.status === 'Armado' ? now : undefined);
-
-    let displayEnd = assemblyEnd;
-    if (!displayEnd) {
-      if (order.status === 'Armado') {
-        displayEnd = now;
-      } else {
-        // If status is past Armado (Listo, Entregado), we should have assemblyEnd.
-        // If status is Entregado, etc.
-        if (['Listo para Entregar', 'Entregado', 'Espera de Retiro'].includes(order.status)) {
-          displayEnd = assemblyEstEnd || now; // Fallback if data missing
-        }
-      }
+    // Espera de repuesto (si hay fechas de repuestos)
+    if (sparePartsEstimatedDate && !evalStart) {
+      // Solo mostrar si no hay información de evaluación
+      let displayEnd = sparePartsArrivalDate || sparePartsEstimatedDate || now;
+      blocks.push({
+        startDay: sparePartsEstimatedDate,
+        endDay: displayEnd,
+        stage: 'Espera de repuesto',
+        duration: Math.max(1, Math.ceil((displayEnd.getTime() - sparePartsEstimatedDate.getTime()) / (1000 * 3600 * 24))),
+        estimatedEndDate: sparePartsEstimatedDate,
+        realEndDate: sparePartsArrivalDate
+      });
     }
 
-    if (displayEnd) {
+    // Llegada de Repuesto
+    if (sparePartsArrivalDate) {
+      const repEnd = assemblyStart || now;
+      blocks.push({
+        startDay: sparePartsArrivalDate,
+        endDay: repEnd,
+        stage: 'Llegada de Repuesto',
+        duration: Math.max(1, Math.ceil((repEnd.getTime() - sparePartsArrivalDate.getTime()) / (1000 * 3600 * 24))),
+      });
+    }
+
+    // Armado
+    if (assemblyStart) {
+      let displayEnd = assemblyEnd || assemblyEstEnd || now;
+      if (!assemblyEnd && order.status === 'Armado') {
+        displayEnd = now;
+      }
       blocks.push({
         startDay: assemblyStart,
         endDay: displayEnd,
@@ -139,6 +304,19 @@ const generateBlocksFromDates = (order: WorkOrder): GanttBlock[] => {
         realEndDate: assemblyEnd,
         estimatedEndDate: assemblyEstEnd
       });
+    }
+
+    // Bloque para etapa actual si no se ha capturado aún
+    if (order.status === 'Listo para Entregar' || order.status === 'Entregado' || order.status === 'Espera de Retiro') {
+      const stageStart = assemblyEnd || assemblyStart || now;
+      if (!blocks.some(b => b.stage === order.status)) {
+        blocks.push({
+          startDay: stageStart,
+          endDay: now,
+          stage: order.status,
+          duration: Math.max(1, Math.ceil((now.getTime() - stageStart.getTime()) / (1000 * 3600 * 24))),
+        });
+      }
     }
   }
 
@@ -242,6 +420,18 @@ export function InteractiveGanttChart({ workOrders }: { workOrders: WorkOrder[] 
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
+        {/* Leyenda de etapas */}
+        <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b">
+          {STAGES.map((stage) => (
+            <div key={stage.id} className="flex items-center gap-1.5">
+              <div
+                className="w-3 h-3 rounded-sm"
+                style={{ backgroundColor: stage.color }}
+              />
+              <span className="text-xs text-muted-foreground">{stage.label}</span>
+            </div>
+          ))}
+        </div>
         <div className="relative" style={{ width: `${250 + totalDays * dayWidth}px` }}>
           {/* Timeline Header */}
           <div className="sticky top-0 z-20 grid bg-card" style={{ gridTemplateColumns: `250px 1fr` }}>

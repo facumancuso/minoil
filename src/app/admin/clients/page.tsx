@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { ClientTable } from '@/components/clients/client-table';
 import { AddEditClientDialog } from '@/components/clients/add-edit-client-dialog';
+import { DeleteClientDialog } from '@/components/clients/delete-client-dialog';
 import { addOrUpdateClientAction } from '@/app/actions';
 import { ClientHistoryDialog } from '@/components/clients/client-history-dialog';
 import { useClients, useWorkOrders } from '@/hooks/use-data';
@@ -27,6 +28,7 @@ export default function AdminClientsPage() {
 
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
   const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
@@ -43,6 +45,11 @@ export default function AdminClientsPage() {
   const handleViewHistory = (client: Client) => {
     setSelectedClient(client);
     setIsHistoryDialogOpen(true);
+  };
+
+  const handleDeleteClient = (client: Client) => {
+    setSelectedClient(client);
+    setIsDeleteDialogOpen(true);
   };
 
   const handleSave = async (clientData: Client) => {
@@ -67,6 +74,11 @@ export default function AdminClientsPage() {
     }
   };
 
+  const handleClientDeleted = () => {
+    refreshClients();
+    setSelectedClient(null);
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -78,7 +90,13 @@ export default function AdminClientsPage() {
           Nuevo Cliente
         </Button>
       </div>
-      <ClientTable clients={clients || []} onEdit={handleEdit} onViewHistory={handleViewHistory} isLoading={isLoadingClients} />
+      <ClientTable 
+        clients={clients || []} 
+        onEdit={handleEdit} 
+        onViewHistory={handleViewHistory}
+        onDelete={handleDeleteClient}
+        isLoading={isLoadingClients} 
+      />
 
       {isAddEditDialogOpen && (
         <AddEditClientDialog
@@ -96,6 +114,15 @@ export default function AdminClientsPage() {
           client={selectedClient}
           workOrders={clientWorkOrders}
           isLoading={isLoadingWorkOrders}
+        />
+      )}
+
+      {isDeleteDialogOpen && selectedClient && (
+        <DeleteClientDialog
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          client={selectedClient}
+          onClientDeleted={handleClientDeleted}
         />
       )}
     </>

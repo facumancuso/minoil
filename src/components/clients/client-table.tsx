@@ -6,7 +6,7 @@ import type { Client } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, MessageCircle, Edit, History } from 'lucide-react';
+import { Mail, Phone, MessageCircle, Edit, History, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '../ui/skeleton';
 
@@ -14,10 +14,11 @@ type ClientTableProps = {
   clients: Client[];
   onEdit: (client: Client) => void;
   onViewHistory: (client: Client) => void;
+  onDelete: (client: Client) => void;
   isLoading?: boolean;
 };
 
-export function ClientTable({ clients, onEdit, onViewHistory, isLoading = false }: ClientTableProps) {
+export function ClientTable({ clients, onEdit, onViewHistory, onDelete, isLoading = false }: ClientTableProps) {
   const [filter, setFilter] = useState('');
 
   const filteredClients = clients.filter(client =>
@@ -92,6 +93,15 @@ export function ClientTable({ clients, onEdit, onViewHistory, isLoading = false 
                          </Button>
                          <Button variant="ghost" size="icon" title="Editar" onClick={() => onEdit(client)}>
                               <Edit className="h-4 w-4" />
+                         </Button>
+                         <Button 
+                           variant="ghost" 
+                           size="icon" 
+                           title="Eliminar" 
+                           onClick={() => onDelete(client)}
+                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                         >
+                              <Trash2 className="h-4 w-4" />
                          </Button>
                       </div>
                     </TableCell>

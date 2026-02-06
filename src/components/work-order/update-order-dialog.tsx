@@ -459,6 +459,10 @@ export function UpdateOrderDialog({ isOpen, onOpenChange, order, onUpdate }: Upd
                             <Controller name="estimatedDeliveryDate" control={control} render={({ field }) => <Input id="estimatedDeliveryDate" type="date" {...field} />} />
                         </div>
                     </div>
+                    <div className="space-y-2 pt-4">
+                        <Label>Adjuntar OC del cliente u otro documento de aprobación</Label>
+                        <FileUploadDnd onFilesChange={setAttachedFiles} />
+                    </div>
                 </div>
             );
         }
@@ -480,8 +484,6 @@ export function UpdateOrderDialog({ isOpen, onOpenChange, order, onUpdate }: Upd
         }
 
         if (toStatus === 'Armado') {
-            // If coming from 'Espera de repuesto', we might want to ensure 'sparePartsArrivalDate' is set?
-            // asking user for it if not set? For now, we leave it standard.
             return (
                 <div className="p-4 border bg-muted/50 rounded-lg mt-4 space-y-4">
                     <h4 className="font-semibold text-foreground">Iniciar Armado</h4>
@@ -515,10 +517,6 @@ export function UpdateOrderDialog({ isOpen, onOpenChange, order, onUpdate }: Upd
                             <Controller name="assemblyMechanics" control={control} render={({ field }) => <Input id="assemblyMechanics" type="number" min="1" {...field} />} />
                             {errors.assemblyMechanics && <p className="text-sm text-destructive">{errors.assemblyMechanics.message}</p>}
                         </div>
-                    </div>
-                    <div className="space-y-2 pt-4">
-                        <Label>Adjuntar OC del cliente u otro documento de aprobación</Label>
-                        <FileUploadDnd onFilesChange={setAttachedFiles} />
                     </div>
                     <div className="space-y-2 pt-4">
                         <Label className="font-semibold">¿Se utilizará stock existente? *</Label>
@@ -569,12 +567,19 @@ export function UpdateOrderDialog({ isOpen, onOpenChange, order, onUpdate }: Upd
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="w-[95vw] max-w-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="font-headline text-base sm:text-lg">Actualizar OT: {order.orderNumber || order.id}</DialogTitle>
+                    <DialogTitle className="font-headline text-base sm:text-lg">Actualizar OT: {order.orderNumber || `#${order.id?.slice(-8).toUpperCase()}`}</DialogTitle>
                     <DialogDescription>
                         Etapa Actual: <span className="font-semibold text-primary">{order.status}</span>
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit(onSubmit, (errors) => console.log("❌ Form validation errors:", errors))} className="space-y-4 py-2 sm:py-4">
+
+                    {/* Display Order Number */}
+                    {order.orderNumber && (
+                        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                            <p className="text-sm"><strong>Número de OT:</strong> <span className="text-blue-700 dark:text-blue-300 font-semibold">{order.orderNumber}</span></p>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="grid gap-1.5 sm:gap-2">

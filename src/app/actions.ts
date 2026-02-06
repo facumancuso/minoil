@@ -152,6 +152,12 @@ export async function updateWorkOrderAction(
     await connect();
     console.log("📝 Updating work order:", orderId, "with data:", formData);
 
+    // Obtener la orden actual para detectar cambios de estado
+    const currentOrder = await WorkOrderModel.findById(orderId);
+    const previousStatus = currentOrder?.status;
+    const newStatus = formData.status;
+    const statusChanged = newStatus && previousStatus !== newStatus;
+
     const updateData: any = {
       ...formData,
       updatedAt: new Date()
@@ -172,15 +178,22 @@ export async function updateWorkOrderAction(
       }
     });
 
-    if (noteText && noteText.trim()) {
-      const newNote = {
-        status: formData.status,
-        note: noteText,
-        timestamp: new Date(),
-        user: 'system',
-      };
-      // @ts-ignore
-      updateData.$push = { notes: newNote };
+    // Siempre registrar cambio de estado en las notas (para el Gantt)
+    if (statusChanged || (noteText && noteText.trim())) {
+      const noteMessage = noteText?.trim()
+        ? noteText
+        : (statusChanged ? `Estado cambiado a: ${newStatus}` : '');
+
+      if (noteMessage) {
+        const newNote = {
+          status: newStatus || previousStatus,
+          note: noteMessage,
+          timestamp: new Date(),
+          user: 'system',
+        };
+        // @ts-ignore
+        updateData.$push = { notes: newNote };
+      }
     }
 
     Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
@@ -337,6 +350,48 @@ export async function getClientsAction() {
   } catch (error) {
     console.error("Error fetching clients:", error);
     return [];
+  }
+}
+
+export async function deleteClientAction(clientId: string) {
+  try {
+    await connect();
+
+    // Verificar si el cliente existe
+    const client = await ClientModel.findById(clientId);
+    if (!client) {
+      return {
+        success: false,
+        error: "Cliente no encontrado"
+      };
+    }
+
+    const clientName = client.name;
+
+    // Eliminar el cliente
+    await ClientModel.findByIdAndDelete(clientId);
+
+    console.log(`🗑️ Client deleted: ${clientName} (ID: ${clientId})`);
+
+    // Trigger automatic backup (non-blocking, error-safe)
+    try {
+      triggerBackup('clients', clientId, 'delete');
+    } catch (backupError) {
+      console.error('⚠️ Backup failed but deletion succeeded:', backupError);
+    }
+
+    revalidatePath('/admin/clients');
+    
+    return {
+      success: true,
+      message: `Cliente "${clientName}" eliminado correctamente`
+    };
+  } catch (error) {
+    console.error("❌ Error deleting client:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error desconocido al eliminar el cliente"
+    };
   }
 }
 

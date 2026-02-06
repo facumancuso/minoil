@@ -4,7 +4,9 @@
       "Bash(curl:*)",
       "Bash(ls:*)",
       "Bash(node scripts/test-client-creation.js:*)",
-      "Bash(node scripts/test-client-uuid-fix.js:*)"
+      "Bash(node scripts/test-client-uuid-fix.js:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }
